@@ -1,3 +1,15 @@
+# DISCLAIMER
+
+THIS IS HIGHLY VIBESLOPPED IM JUST MAKING THIS BECAUSE THE ORIGINAL ELECTRON APP IS SO FUCKING BIG YOU HAVE BEEN WARNED
+
+since im a professional web hater i probably wont touch the ecmascript-ish part ever ~~but hey we are talking about tauri which uses rust too so i probably can help in that part~~
+
+btw now it doesnt expose a whole unix root (or whatever that stuff is) to the machine but instead only the shared folder so that is good ig
+
+and yes im even sorrier than the original author
+
+here u have the og readme
+
 # macintosh.js
 
 This is Mac OS 8, running in an [Electron](https://electronjs.org/) app pretending to be a 1991 Macintosh Quadra. Yes, it's the full thing. I'm sorry.

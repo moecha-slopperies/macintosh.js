@@ -29,22 +29,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Build for supported platforms
-        # https://github.com/electron/electron-packager/blob/ebcbd439ff3e0f6f92fa880ff28a8670a9bcf2ab/src/targets.js#L9
-        # 32-bit Linux unsupported as of 2019: https://www.electronjs.org/blog/linux-32bit-support
-        os: [ macOS-latest, ubuntu-latest, windows-latest ]
-        arch: [ x64, arm64 ]
         include:
-        - os: windows-latest
-          arch: ia32
-        - os: ubuntu-latest
-          arch: armv7l
-        # Publishing artifacts for multiple Windows architectures has
-        # a bug which can cause the wrong architecture to be downloaded
-        # for an update, so until that is fixed, only build Windows x64
-        exclude:
-        - os: windows-latest
-          arch: arm64
+          - os: macos-latest
+            arch: arm64
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            arch: x64
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            arch: x64
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            arch: x64
+            target: x86_64-pc-windows-msvc
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -53,12 +53,22 @@ jobs:
         with:
           node-version: 20.x
           cache: npm
-      - name: Set MacOS signing certs
-        if: matrix.os == 'macOS-latest'
-        run: chmod +x tools/add-macos-cert.sh && ./tools/add-macos-cert.sh
-        env:
-          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
-          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install Linux dependencies
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            libxdo-dev \
+            libssl-dev \
+            librsvg2-dev \
+            patchelf
       - name: Set up Azure Trusted Signing
         if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
         shell: pwsh
@@ -79,18 +89,23 @@ jobs:
           DISK_URL: ${{ secrets.DISK_URL }}
       - name: Install
         run: npm ci
-      - name: Make
+      - name: Build
         if: startsWith(github.ref, 'refs/tags/')
-        run: npm run make -- --arch=${{ matrix.arch }}
+        run: npm run tauri -- build --target ${{ matrix.target }}
         env:
+          APPLE_CERTIFICATE: ${{ secrets.MACOS_CERT_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: "Developer ID Application: Felix Rieseberg (LT94ZKYDCJ)"
           APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: LT94ZKYDCJ
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_CODE_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT_NAME }}
           AZURE_CODE_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_CODE_SIGNING_CERTIFICATE_PROFILE_NAME }}
+          AZURE_CODE_SIGNING_ENDPOINT: ${{ secrets.AZURE_CODE_SIGNING_ENDPOINT }}
       - name: Release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         if: startsWith(github.ref, 'refs/tags/')
@@ -99,8 +114,9 @@ jobs:
         with:
           draft: true
           files: |
-            out/**/*.deb
-            out/**/*.dmg
-            out/**/*setup*.exe
-            out/**/*.rpm
-            out/**/*.zip
+            src-tauri/target/**/release/bundle/**/*.deb
+            src-tauri/target/**/release/bundle/**/*.dmg
+            src-tauri/target/**/release/bundle/**/*.msi
+            src-tauri/target/**/release/bundle/**/*.rpm
+            src-tauri/target/**/release/bundle/**/*.AppImage
+            src-tauri/target/**/release/bundle/**/*.exe

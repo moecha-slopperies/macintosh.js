@@ -1,47 +1,61 @@
-const { shell, ipcRenderer } = require("electron");
-const path = require("path");
-const fs = require("fs");
-const homedir = require("os").homedir();
-const macDir = path.join(homedir, "macintosh.js");
+import { invoke } from "@tauri-apps/api/core";
+import { appInfo, showError } from "./platform.js";
 
 let isDevTools;
+const userDirectoryLinks = document.querySelectorAll("#user_dir, #user_dir2");
+const devtoolsButton = document.querySelector("#devtools");
 
-// Setup dev mode
-function fetchIsDevTools() {
-  ipcRenderer.invoke("getIsDevMode").then((result) => {
+async function fetchIsDevTools() {
+  await invoke("is_dev_mode").then((result) => {
     isDevTools = result;
 
     if (result) {
-      devtools.innerHTML = "Disable developer tools";
+      devtoolsButton.innerHTML = "Disable developer tools";
     } else {
-      devtools.innerHTML = "Enable developer tools";
+      devtoolsButton.innerHTML = "Enable developer tools";
     }
   });
 }
 
 async function help() {
-  user_dir.onclick = user_dir2.onclick = () => {
-    try {
-      if (!fs.existsSync(macDir)) {
-        fs.mkdirSync(macDir);
-      }
+  for (const link of userDirectoryLinks) {
+    link.onclick = (event) => {
+      event.preventDefault();
+      revealSharedDirectory();
+    };
+  }
 
-      shell.showItemInFolder(macDir);
-    } catch (error) {
-      ipcRenderer.invoke("showMessageBox", {
-        type: "error",
-        title: "Could not open folder",
-        message: `We tried to open the macintosh.js directory, but failed. The error was: ${error}`,
-      });
-    }
+  devtoolsButton.onclick = async () => {
+    await invoke("set_dev_mode", { enabled: !isDevTools });
+    await fetchIsDevTools();
   };
 
-  devtools.onclick = async () => {
-    await ipcRenderer.invoke("setIsDevMode", !isDevTools);
-    fetchIsDevTools();
-  };
-
-  fetchIsDevTools();
+  const info = await appInfo();
+  for (const element of userDirectoryLinks) {
+    element.textContent = "user directory";
+    element.title = info.sharedPath;
+  }
+  await fetchIsDevTools();
 }
 
-help();
+function revealSharedDirectory() {
+  try {
+    invoke("reveal_shared_dir").catch((error) => {
+      showError(
+        "Could not open folder",
+        `We tried to open the macintosh.js directory, but failed. The error was: ${error}`,
+      );
+    });
+  } catch (error) {
+    showError(
+      "Could not open folder",
+      `We tried to open the macintosh.js directory, but failed. The error was: ${error}`,
+    );
+  }
+}
+
+// Keep the helpers local to this page; Tauri commands are async, so clicks
+// must not depend on implicit renderer globals.
+void (async () => {
+  await help();
+})();

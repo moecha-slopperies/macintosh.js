@@ -1,27 +1,13 @@
-const { ipcRenderer } = require("electron");
+import { invoke } from "@tauri-apps/api/core";
 
-module.exports = {
-  quit() {
-    ipcRenderer.invoke("quit");
-  },
+export function quit() {
+  return invoke("quit");
+}
 
-  devtools() {
-    ipcRenderer.invoke("devtools");
-  },
+export function devtools() {
+  return invoke("toggle_devtools");
+}
 
-  getIsDevMode() {
-    return ipcRenderer.invoke("getIsDevMode");
-  },
-
-  setIsDevMode() {
-    return ipcRenderer.invoke("setIsDevMode");
-  },
-
-  getAppVersion() {
-    return ipcRenderer.invoke("getAppVersion");
-  },
-
-  getUserDataPath() {
-    return ipcRenderer.invoke("getUserDataPath");
-  },
-};
+export function getIsDevMode() {
+  return invoke("is_dev_mode");
+}

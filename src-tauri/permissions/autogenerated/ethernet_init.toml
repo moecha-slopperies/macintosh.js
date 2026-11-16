@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ethernet-init"
+description = "Enables the ethernet_init command without any pre-configured scope."
+commands.allow = ["ethernet_init"]
+
+[[permission]]
+identifier = "deny-ethernet-init"
+description = "Denies the ethernet_init command without any pre-configured scope."
+commands.deny = ["ethernet_init"]

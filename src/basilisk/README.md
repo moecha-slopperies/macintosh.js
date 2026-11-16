@@ -20,8 +20,8 @@ That build in turn descends from **Basilisk II** by Christian Bauer et al.
 in `BasiliskII-worker-boot.js` are derived from Infinite Mac's
 `src/emulator/common/common.ts`, `src/emulator/common/key-codes.ts`, and
 `src/emulator/worker/worker.ts` respectively. Each adapted file carries an
-attribution header. The Electron-specific bits (Node `fs` disk I/O, extfs
-host-folder sync, IPC ethernet bridge) are macintosh.js's own.
+attribution header. The Tauri-specific bits (Rust disk I/O, extfs host-folder
+sync, and the native UDP ethernet bridge) are macintosh.js's own.
 
 ## Updating
 

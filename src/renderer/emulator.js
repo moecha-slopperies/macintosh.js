@@ -1,8 +1,7 @@
-const { drawScreen } = require("./screen");
-const { openAudio } = require("./audio");
-const { tryToSendInput } = require("./input");
-const { registerWorker, setCanvasBlank } = require("./worker");
-const { setupDialogs } = require("./dialogs");
+import { drawScreen } from "./screen.js";
+import { tryToSendInput } from "./input.js";
+import { registerWorker } from "./worker.js";
+import { setupDialogs } from "./dialogs.js";
 
 function asyncLoop() {
   drawScreen();
@@ -11,10 +10,13 @@ function asyncLoop() {
 }
 
 async function start() {
-  await registerWorker();
-  setupDialogs();
-  openAudio();
-  asyncLoop();
+  try {
+    await registerWorker();
+    setupDialogs();
+    asyncLoop();
+  } catch (error) {
+    console.error("Failed to start macintosh.js", error);
+  }
 }
 
 start();

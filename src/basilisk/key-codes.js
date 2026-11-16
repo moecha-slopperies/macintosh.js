@@ -6,7 +6,7 @@
 // `src/emulator/common/key-codes.ts`, Copyright Mihai Parparita,
 // Apache License 2.0. See LICENSE-infinite-mac.
 
-const JS_CODE_TO_ADB_KEYCODE = {
+export const JS_CODE_TO_ADB_KEYCODE = {
   KeyA: 0x00,
   KeyS: 0x01,
   KeyD: 0x02,
@@ -124,5 +124,3 @@ const JS_CODE_TO_ADB_KEYCODE = {
   ArrowUp: 0x3e,
   Power: 0x7f,
 };
-
-module.exports = { JS_CODE_TO_ADB_KEYCODE };

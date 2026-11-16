@@ -1,13 +1,14 @@
-const { quit } = require("./ipc");
+import { quit } from "./ipc.js";
 
-function setupDialogs() {
+export function setupDialogs() {
   // Still empty
 }
 
-function showCloseWarning() {
+export function showCloseWarning() {
   const warningDialog = document.querySelector("#warning");
 
   document.querySelector("#warning-quit").onclick = () => {
+    document.querySelector("#warning").classList.add("hidden");
     quit();
   };
 
@@ -17,8 +18,3 @@ function showCloseWarning() {
 
   warningDialog.classList.remove("hidden");
 }
-
-module.exports = {
-  setupDialogs,
-  showCloseWarning,
-};

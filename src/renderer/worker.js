@@ -1,55 +1,69 @@
-const { ipcRenderer } = require("electron");
-const { inputBuffer, inputBufferView } = require("./input");
-const { videoModeBuffer } = require("./video");
-const {
+import { invoke } from "@tauri-apps/api/core";
+import { inputBuffer, inputBufferView } from "./input.js";
+import { videoModeBuffer } from "./video.js";
+import {
   screenBuffer,
   SCREEN_WIDTH,
   SCREEN_HEIGHT,
   setCanvasBlank,
-} = require("./screen");
-const { audioDataBuffer, audioBlockChunkSize } = require("./audio");
-const {
+} from "./screen.js";
+import { audioDataBuffer, openAudio } from "./audio.js";
+import {
   ethernetReceiveBuffer,
   setupEthernet,
   handleEthernetInit,
   handleEthernetWrite,
-} = require("./ethernet");
-const { quit, getIsDevMode, getUserDataPath } = require("./ipc");
+} from "./ethernet.js";
+import { quit } from "./ipc.js";
+import { showError } from "./platform.js";
+import { setupDiskBridge } from "./disk-bridge-host.js";
 
 let isWorkerRunning = false;
 let isWorkerSaving = false;
 let worker;
 
-function getIsWorkerRunning() {
+export function getIsWorkerRunning() {
   return isWorkerRunning;
 }
 
-function getIsWorkerSaving() {
+export function getIsWorkerSaving() {
   return isWorkerSaving;
 }
 
-function saveExtfs() {
-  isWorkerSaving = true;
-  document.querySelector("#disk_saving").classList.remove("hidden");
-  worker.postMessage("save_extfs");
-}
-
-async function handleExtfsSaved() {
-  isWorkerSaving = false;
-  if (!(await getIsDevMode())) {
-    quit();
-  } else {
-    alert(`We would usually quit, but developer mode is active`);
+async function saveExtfsSnapshot(hostBase, files) {
+  for (const file of files) {
+    await invoke("write_shared_file", {
+      hostBase,
+      path: file.path,
+      data: Array.from(file.data),
+    });
   }
 }
 
-async function handleWorkerShutdown() {
+async function handleWorkerShutdown(msg) {
+  isWorkerRunning = false;
+  isWorkerSaving = true;
   document.body.classList.remove("emulator_running");
   await setCanvasBlank();
-  saveExtfs();
+  document.querySelector("#disk_saving").classList.remove("hidden");
+
+  try {
+    if (msg.error) throw new Error(msg.error);
+    await saveExtfsSnapshot(msg.hostBase, msg.files || []);
+  } catch (error) {
+    console.error("Could not save files from the virtual machine", error);
+    showError(
+      "Could not save files",
+      `We tried to save files from the virtual machine, but failed. The error was: ${error}`,
+    );
+  } finally {
+    isWorkerSaving = false;
+  }
+
+  quit();
 }
 
-async function registerWorker() {
+export async function registerWorker() {
   setupEthernet(inputBufferView);
 
   const config = {
@@ -57,21 +71,19 @@ async function registerWorker() {
     screenBuffer,
     videoModeBuffer,
     audioDataBuffer,
-    audioBlockChunkSize,
     ethernetReceiveBuffer,
     screenWidth: SCREEN_WIDTH,
     screenHeight: SCREEN_HEIGHT,
-    userDataPath: await getUserDataPath(),
-    isDevMode: await getIsDevMode(),
   };
 
   worker = window.emulatorWorker = new Worker(
-    "../basilisk/BasiliskII-worker-boot.js",
+    new URL("../basilisk/BasiliskII-worker-boot.js", import.meta.url),
+    { type: "module" },
   );
+  setupDiskBridge(worker);
 
   isWorkerRunning = true;
 
-  worker.postMessage({ type: "start", config });
   worker.onmessage = function (e) {
     const msg = e.data;
     switch (msg?.type) {
@@ -87,11 +99,11 @@ async function registerWorker() {
         document.body.classList.remove("emulator_loading");
         document.body.classList.add("emulator_running");
         break;
-      case "emulator_quit":
-        handleWorkerShutdown();
+      case "emulator_audio_open":
+        void openAudio(msg.sampleRate, msg.sampleSize, msg.channels);
         break;
-      case "extfs_saved":
-        handleExtfsSaved();
+      case "emulator_quit":
+        void handleWorkerShutdown(msg);
         break;
       case "emulator_ethernet_init":
         handleEthernetInit(msg.macAddress);
@@ -104,24 +116,18 @@ async function registerWorker() {
         break;
       case "emulator_error":
         console.error("Emulator error", msg.error);
-        ipcRenderer.invoke("showMessageBox", {
-          type: "error",
-          title: "Emulator error",
-          message: msg.error,
-        });
+        showError("Emulator error", msg.error);
         break;
       case "showMessageBoxSync":
-        ipcRenderer.invoke("showMessageBoxSync", msg.options);
+        showError(
+          msg.options?.title || "macintosh.js",
+          msg.options?.message || String(msg.options),
+        );
         break;
       case "TTY":
         // Logged in the worker; nothing to do here.
         break;
     }
   };
+  worker.postMessage({ type: "start", config });
 }
-
-module.exports = {
-  registerWorker,
-  getIsWorkerRunning,
-  getIsWorkerSaving,
-};

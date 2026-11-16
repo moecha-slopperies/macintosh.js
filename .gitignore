@@ -89,6 +89,11 @@ typings/
 out/
 dist/
 
+# Tauri
+dist-renderer/
+src-tauri/target/
+src-tauri/gen/
+
 # Windows signing
 Microsoft.Trusted.Signing.Client*/
 trusted-signing-metadata.json

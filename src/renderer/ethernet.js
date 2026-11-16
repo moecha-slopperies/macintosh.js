@@ -1,25 +1,28 @@
 // Renderer-side ethernet plumbing.
 //
 // Outbound: the worker postMessages each frame the emulated Mac transmits;
-// we forward it to the main process over IPC. Inbound: the main process sends
-// frames back over IPC and we push them into a SharedArrayBuffer ring that the
-// worker polls synchronously from inside the WASM main loop (which never
+// we forward it to the Tauri host over IPC. Inbound: the Rust bridge sends
+// frames back as events and we push them into a SharedArrayBuffer ring that
+// the worker polls synchronously from inside the WASM main loop (which never
 // yields to the JS event queue, so postMessage alone would not work).
 //
 // The ring layout matches src/basilisk/shared-buffers.js. The
 // length-prefixed framing is the same scheme Infinite Mac uses
 // (https://github.com/mihaip/infinite-mac, Apache-2.0).
 
-const { ipcRenderer } = require("electron");
-const { acquireLock, releaseLock } = require("./atomics");
-const {
+import { invoke } from "@tauri-apps/api/core";
+import { acquireLock, releaseLock } from "./atomics.js";
+import {
   InputBufferAddresses,
   ETHERNET_HEADER_INTS,
   ETHERNET_BODY_SIZE,
   ETHERNET_BUFFER_SIZE,
-} = require("../basilisk/shared-buffers");
+} from "../basilisk/shared-buffers.js";
+import { onEthernetFrame } from "./platform.js";
 
-const ethernetReceiveBuffer = new SharedArrayBuffer(ETHERNET_BUFFER_SIZE);
+export const ethernetReceiveBuffer = new SharedArrayBuffer(
+  ETHERNET_BUFFER_SIZE,
+);
 const header = new Int32Array(ethernetReceiveBuffer, 0, ETHERNET_HEADER_INTS);
 const body = new Uint8Array(
   ethernetReceiveBuffer,
@@ -62,24 +65,21 @@ function pushFrame(frame) {
   }
 }
 
-function setupEthernet(sharedInputBufferView) {
+export function setupEthernet(sharedInputBufferView) {
   inputBufferView = sharedInputBufferView;
-  ipcRenderer.on("ethernet-receive", (_event, frame) => {
+  onEthernetFrame((frame) => {
     pushFrame(new Uint8Array(frame));
   });
 }
 
-function handleEthernetInit(macAddress) {
-  ipcRenderer.send("ethernet-init", macAddress);
+export function handleEthernetInit(macAddress) {
+  invoke("ethernet_init", { macAddress }).catch((error) =>
+    console.warn("ethernet: could not initialize bridge", error),
+  );
 }
 
-function handleEthernetWrite(destination, packet) {
-  ipcRenderer.send("ethernet-send", destination, packet);
+export function handleEthernetWrite(destination, packet) {
+  invoke("ethernet_send", { destination, frame: Array.from(packet) }).catch(
+    (error) => console.warn("ethernet: could not send frame", error),
+  );
 }
-
-module.exports = {
-  ethernetReceiveBuffer,
-  setupEthernet,
-  handleEthernetInit,
-  handleEthernetWrite,
-};

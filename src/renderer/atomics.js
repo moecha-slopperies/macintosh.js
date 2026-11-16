@@ -1,6 +1,6 @@
-const { LockStates } = require("../basilisk/shared-buffers");
+import { LockStates } from "../basilisk/shared-buffers.js";
 
-function acquireLock(bufferView, lockIndex) {
+export function acquireLock(bufferView, lockIndex) {
   const res = Atomics.compareExchange(
     bufferView,
     lockIndex,
@@ -11,13 +11,9 @@ function acquireLock(bufferView, lockIndex) {
   return res === LockStates.READY_FOR_UI_THREAD;
 }
 
-function releaseLock(bufferView, lockIndex) {
+export function releaseLock(bufferView, lockIndex) {
   Atomics.store(bufferView, lockIndex, LockStates.READY_FOR_EMUL_THREAD);
   Atomics.notify(bufferView, lockIndex);
 }
 
-module.exports = {
-  acquireLock,
-  releaseLock,
-  LockStates,
-};
+export { LockStates };

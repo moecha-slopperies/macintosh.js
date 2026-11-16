@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "macintosh.js",
+  "version": "1.2.0",
+  "identifier": "com.felixrieseberg.macintoshjs",
+  "build": {
+    "beforeDevCommand": "npm run dev:renderer",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build:renderer",
+    "frontendDist": "../dist-renderer"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ipc: http://ipc.localhost http://tauri.localhost http://tauri.localhost:1420 ws://localhost:1420 http://localhost:1420; worker-src 'self' blob:; media-src 'self'; object-src 'none'; base-uri 'self'",
+      "headers": {
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Opener-Policy": "same-origin"
+      }
+    },
+    "windows": []
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "DeveloperTool",
+    "shortDescription": "Mac OS 8 in a Tauri app",
+    "longDescription": "A complete Mac OS 8 virtual machine, packaged as a small Tauri desktop app.",
+    "icon": [
+      "icons/icon.icns",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "resources": {
+      "../src/basilisk/*": "basilisk"
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
+    "windows": {
+      "signCommand": {
+        "cmd": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "../tools/sign-windows.ps1",
+          "%1"
+        ]
+      }
+    }
+  }
+}

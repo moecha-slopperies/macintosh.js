@@ -7,7 +7,9 @@
 // Adapted from Infinite Mac (https://github.com/mihaip/infinite-mac),
 // Copyright Mihai Parparita, Apache License 2.0. See LICENSE-infinite-mac.
 
-const InputBufferAddresses = {
+// This module is imported by both the renderer and the emulator worker.
+
+export const InputBufferAddresses = {
   globalLockAddr: 0,
 
   mousePositionFlagAddr: 1,
@@ -36,24 +38,25 @@ const InputBufferAddresses = {
   pausedAddr: 19,
 };
 
-const LockStates = {
+export const LockStates = {
   READY_FOR_UI_THREAD: 0,
   UI_THREAD_LOCK: 1,
   READY_FOR_EMUL_THREAD: 2,
   EMUL_THREAD_LOCK: 3,
 };
 
-const INPUT_BUFFER_SIZE = 100;
-const VIDEO_MODE_BUFFER_SIZE = 10;
+export const INPUT_BUFFER_SIZE = 100;
+export const VIDEO_MODE_BUFFER_SIZE = 10;
 
 // Ethernet receive ring-buffer layout (Int32 header + Uint8 body).
 // Header: [0]=writeIndex, [1]=readIndex. Body holds length-prefixed frames
 // (uint16 BE length + frame bytes), wrapping at body length.
-const ETHERNET_HEADER_INTS = 2;
-const ETHERNET_BODY_SIZE = 1522 * 16;
-const ETHERNET_BUFFER_SIZE = ETHERNET_HEADER_INTS * 4 + ETHERNET_BODY_SIZE;
+export const ETHERNET_HEADER_INTS = 2;
+export const ETHERNET_BODY_SIZE = 1522 * 16;
+export const ETHERNET_BUFFER_SIZE =
+  ETHERNET_HEADER_INTS * 4 + ETHERNET_BODY_SIZE;
 
-module.exports = {
+export default {
   InputBufferAddresses,
   LockStates,
   INPUT_BUFFER_SIZE,

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-user-images"
+description = "Enables the list_user_images command without any pre-configured scope."
+commands.allow = ["list_user_images"]
+
+[[permission]]
+identifier = "deny-list-user-images"
+description = "Denies the list_user_images command without any pre-configured scope."
+commands.deny = ["list_user_images"]

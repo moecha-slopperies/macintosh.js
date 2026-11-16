@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-disk-size"
+description = "Enables the disk_size command without any pre-configured scope."
+commands.allow = ["disk_size"]
+
+[[permission]]
+identifier = "deny-disk-size"
+description = "Denies the disk_size command without any pre-configured scope."
+commands.deny = ["disk_size"]

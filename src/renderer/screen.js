@@ -1,11 +1,12 @@
-const { videoModeBufferView } = require("./video");
+import { videoModeBufferView } from "./video.js";
+import offBackgroundUrl from "./images/off_bg.png?url";
 
-const SCREEN_WIDTH = 800;
-const SCREEN_HEIGHT = 600;
-const SCREEN_BUFFER_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT * 4; // RGBA
+export const SCREEN_WIDTH = 800;
+export const SCREEN_HEIGHT = 600;
+export const SCREEN_BUFFER_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT * 4; // RGBA
 
-const screenBuffer = new SharedArrayBuffer(SCREEN_BUFFER_SIZE);
-const screenBufferView = new Uint8Array(screenBuffer);
+export const screenBuffer = new SharedArrayBuffer(SCREEN_BUFFER_SIZE);
+export const screenBufferView = new Uint8Array(screenBuffer);
 
 canvas.width = SCREEN_WIDTH;
 canvas.height = SCREEN_HEIGHT;
@@ -29,7 +30,7 @@ fitCanvas();
 
 let stopDrawing = false;
 
-function drawScreen() {
+export function drawScreen() {
   if (stopDrawing) return;
   const len = videoModeBufferView[0];
   if (len > 0) {
@@ -38,30 +39,33 @@ function drawScreen() {
   }
 }
 
-function setCanvasBlank() {
+export function setCanvasBlank() {
   return new Promise((resolve) => {
     stopDrawing = true;
     const ctx = canvas.getContext("2d");
     const bg = new Image();
+    let settled = false;
+
+    function finish() {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      resolve();
+    }
+
+    const timeout = window.setTimeout(finish, 2_000);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     bg.onload = () => {
       const pattern = ctx.createPattern(bg, "repeat");
-      ctx.fillStyle = pattern;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      resolve();
+      if (pattern) {
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      finish();
     };
-    bg.src = "images/off_bg.png";
+    bg.onerror = finish;
+    bg.src = offBackgroundUrl;
   });
 }
-
-module.exports = {
-  screenBuffer,
-  screenBufferView,
-  SCREEN_BUFFER_SIZE,
-  SCREEN_WIDTH,
-  SCREEN_HEIGHT,
-  drawScreen,
-  setCanvasBlank,
-};

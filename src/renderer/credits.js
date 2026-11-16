@@ -1,17 +1,14 @@
-const { shell, ipcRenderer } = require("electron");
-const path = require("path");
-
-const { getAppVersion } = require("./ipc");
+import { invoke } from "@tauri-apps/api/core";
 
 async function credits() {
-  license.onclick = () => {
-    const licensePath = path.join(__dirname, "../basilisk/LICENSE.txt");
-    shell.openPath(licensePath);
+  document.querySelector("#license").onclick = (event) => {
+    event.preventDefault();
+    invoke("open_license").catch((error) => console.error(error));
   };
 
-  const version = await getAppVersion();
+  const info = await invoke("app_info");
   document.querySelector("#versions").innerHTML =
-    `macintosh.js v${version} with Electron v${process.versions.electron}`;
+    `macintosh.js v${info.version} with Tauri`;
 }
 
 credits();

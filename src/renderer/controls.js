@@ -1,16 +1,16 @@
-const { quit, devtools } = require("./ipc");
-const { getIsWorkerRunning, getIsWorkerSaving } = require("./worker");
-const { showCloseWarning } = require("./dialogs");
-const { getIsDevMode } = require("./ipc");
+import { quit, devtools } from "./ipc.js";
+import { getIsWorkerRunning, getIsWorkerSaving } from "./worker.js";
+import { showCloseWarning } from "./dialogs.js";
+import { getIsDevMode } from "./ipc.js";
 
 async function registerControls() {
   document.querySelector("#close").addEventListener("click", () => {
-    if (!getIsWorkerRunning()) {
-      quit();
-    } else if (!getIsWorkerSaving()) {
+    if (getIsWorkerSaving()) {
+      // Saving already in progress; quit once it completes.
+    } else if (getIsWorkerRunning()) {
       showCloseWarning();
     } else {
-      // We're saving, and we're doing nothing. We're making the user wait.
+      quit();
     }
   });
 

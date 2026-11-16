@@ -1,13 +1,13 @@
-const { acquireLock, releaseLock } = require("./atomics");
-const {
+import { acquireLock, releaseLock } from "./atomics.js";
+import {
   InputBufferAddresses,
   INPUT_BUFFER_SIZE,
-} = require("../basilisk/shared-buffers");
-const { JS_CODE_TO_ADB_KEYCODE } = require("../basilisk/key-codes");
-const { SCREEN_WIDTH, SCREEN_HEIGHT } = require("./screen");
+} from "../basilisk/shared-buffers.js";
+import { JS_CODE_TO_ADB_KEYCODE } from "../basilisk/key-codes.js";
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from "./screen.js";
 
-const inputBuffer = new SharedArrayBuffer(INPUT_BUFFER_SIZE * 4);
-const inputBufferView = new Int32Array(inputBuffer);
+export const inputBuffer = new SharedArrayBuffer(INPUT_BUFFER_SIZE * 4);
+export const inputBufferView = new Int32Array(inputBuffer);
 
 let inputQueue = [];
 
@@ -15,7 +15,7 @@ function releaseInputLock() {
   releaseLock(inputBufferView, InputBufferAddresses.globalLockAddr);
 }
 
-function tryToSendInput() {
+export function tryToSendInput() {
   if (!inputQueue.length) return;
   if (!acquireLock(inputBufferView, InputBufferAddresses.globalLockAddr)) {
     return;
@@ -118,9 +118,3 @@ window.addEventListener("keyup", function (event) {
   event.preventDefault();
   inputQueue.push({ type: "keyup", keyCode: adb });
 });
-
-module.exports = {
-  inputBuffer,
-  inputBufferView,
-  tryToSendInput,
-};

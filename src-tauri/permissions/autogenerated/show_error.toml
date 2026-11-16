@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-show-error"
+description = "Enables the show_error command without any pre-configured scope."
+commands.allow = ["show_error"]
+
+[[permission]]
+identifier = "deny-show-error"
+description = "Denies the show_error command without any pre-configured scope."
+commands.deny = ["show_error"]
