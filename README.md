@@ -2,9 +2,14 @@
 
 THIS IS HIGHLY VIBESLOPPED IM JUST MAKING THIS BECAUSE THE ORIGINAL ELECTRON APP IS SO FUCKING BIG YOU HAVE BEEN WARNED
 
-since im a professional web hater i probably wont touch the ecmascript-ish part ever ~~but hey we are talking about tauri which uses rust too so i probably can help in that part~~
+~~i will not tell ya the majority of the original binary is the disk image which makes this project kinda pointless~~
 
-btw now it doesnt expose a whole unix root (or whatever that stuff is) to the machine but instead only the shared folder so that is good ig
+since im a professional web hater i probably wont touch the ecmascript-ish part ever ~~but hey we are talking about tauri which uses rust too so i probably can help in that part (and no rust is NOT what id call ecmascript-ish despite how many language features the former has borrowed from the latter)~~
+
+some notable differences:
+
+* the performance is generally worse than the electron version and may vary depending on your system webview implementation, on windows it should be not too far off as the system webview is also chromium based, but on macos or linux expect apparently worse performance proudly brought to you by webkit
+* it doesnt expose a whole unix root (or whatever that stuff is) to the machine but instead only the shared folder (iirc this is an infinite mac thing)
 
 and yes im even sorrier than the original author
 
