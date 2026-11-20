@@ -219,7 +219,7 @@ fn setup_window(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let origin = AppOrigin::new(app)?;
     let window = WebviewWindowBuilder::new(app, "main", origin.webview_url("index.html")?)
         .title("macintosh.js")
-        .inner_size(900.0, 730.0)
+        .inner_size(800.0, 655.0)
         .transparent(true)
         .decorations(false)
         .on_navigation({

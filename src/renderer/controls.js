@@ -4,6 +4,10 @@ import { showCloseWarning } from "./dialogs.js";
 import { getIsDevMode } from "./ipc.js";
 
 async function registerControls() {
+  document.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+  });
+
   document.querySelector("#close").addEventListener("click", () => {
     if (getIsWorkerSaving()) {
       // Saving already in progress; quit once it completes.
