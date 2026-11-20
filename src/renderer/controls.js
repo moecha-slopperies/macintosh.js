@@ -4,7 +4,7 @@ import { showCloseWarning } from "./dialogs.js";
 import { getIsDevMode } from "./ipc.js";
 
 async function registerControls() {
-  document.addEventListener('contextmenu', (event) => {
+  document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
   });
 
@@ -17,6 +17,16 @@ async function registerControls() {
       quit();
     }
   });
+
+  for (const [selector, page] of [
+    ["#credits", "credits.html"],
+    ["#help", "help.html"],
+  ]) {
+    document.querySelector(selector).addEventListener("click", (event) => {
+      event.preventDefault();
+      window.open(page);
+    });
+  }
 
   document.querySelector("#devtools").addEventListener("click", () => {
     devtools();
