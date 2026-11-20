@@ -11,6 +11,7 @@
     "core:default",
     "core:window:allow-show",
     "core:window:allow-set-focus",
+    "core:window:allow-start-dragging",
     "core:webview:allow-internal-toggle-devtools",
     "allow-app-info",
     "allow-get-shared-path",
