@@ -1,0 +1,10 @@
+{
+  "description": "Mac OS 8.1 TCP/IP defaults: Ethernet, DHCP, TCP.",
+  "deletes": [],
+  "files": [
+    {
+      "source": "files/tcp-ip-preferences.bin",
+      "target": ":System Folder:Preferences:TCP/IP Preferences"
+    }
+  ]
+}

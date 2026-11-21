@@ -1,0 +1,19 @@
+{
+  "default": "8.1",
+  "disks": {
+    "7.6": {
+      "url": "https://github.com/mihaip/infinite-mac/releases/download/mac-os-disk-images-2025-11-30/Mac.OS.7.6.HD.dsk.zip?v=3",
+      "zipSha256": "4d2f89fc21481f869d5641eb7bd8b1ebd0703167cc79478b8f40899cfff4bc3d",
+      "imageSha256": "e25803d5353ec133c0e8b7e6ec7c1ef25c56a7b1a917d70132a81044e7927d18",
+      "member": "Mac OS 7.6 HD.dsk",
+      "description": "Mac OS 7.6"
+    },
+    "8.1": {
+      "url": "https://github.com/mihaip/infinite-mac/releases/download/mac-os-disk-images-2025-11-30/Mac.OS.8.1.HD.dsk.zip?v=3",
+      "zipSha256": "ba864f109fb735b1bb660c97d496db8e3bea1fc08ee2b9d7c451e6f554b31f34",
+      "imageSha256": "e8e9be417a064f4c1e2e257253f901b141f3b64936139467cdc2863a8348a709",
+      "member": "Mac OS 8.1 HD.dsk",
+      "description": "Mac OS 8.1"
+    }
+  }
+}

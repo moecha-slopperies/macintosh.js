@@ -13,7 +13,7 @@ use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use url::Url;
 
-use disk::DiskState;
+use disk::{BootDiskOverride, DiskState};
 use ethernet::EthernetState;
 
 static QUIT_CONFIRMED: AtomicBool = AtomicBool::new(false);
@@ -43,8 +43,11 @@ fn get_shared_path() -> Result<String, String> {
 }
 
 #[tauri::command]
-fn boot_disk_info(app: AppHandle) -> Result<disk::DiskSpec, String> {
-    disk::prepare_boot_disk(&app)
+fn boot_disk_info(
+    app: AppHandle,
+    boot: tauri::State<'_, BootDiskOverride>,
+) -> Result<disk::DiskSpec, String> {
+    disk::prepare_boot_disk(&app, boot.inner())
 }
 
 #[tauri::command]
@@ -95,14 +98,17 @@ fn quit(app: AppHandle) {
 }
 
 fn copy_bundle_resources(app: &AppHandle) -> Result<(), String> {
-    let resources = app
-        .path()
-        .resource_dir()
-        .map_err(|error| format!("could not locate resources: {error}"))?;
     let user_data = platform::user_data_dir(app)?;
     fs::create_dir_all(&user_data)
         .map_err(|error| format!("could not create {}: {error}", user_data.display()))?;
-    platform::copy_initial_disk(&resources, &user_data.join("disk"))?;
+
+    if app.state::<BootDiskOverride>().path().is_none() {
+        let resources = app
+            .path()
+            .resource_dir()
+            .map_err(|error| format!("could not locate resources: {error}"))?;
+        platform::copy_initial_disk(&resources, &user_data.join("disk"))?;
+    }
 
     Ok(())
 }
@@ -249,9 +255,15 @@ fn setup_window(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let boot_disk = disk::BootDiskOverride::from_env_and_args().unwrap_or_else(|error| {
+        eprintln!("macintosh.js: {error}");
+        std::process::exit(2);
+    });
+
     tauri::Builder::default()
         .manage(DiskState::new())
         .manage(EthernetState::new())
+        .manage(boot_disk)
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![

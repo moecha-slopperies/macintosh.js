@@ -1,0 +1,38 @@
+{
+  "description": "Install the default software set.",
+  "deletes": [],
+  "files": [
+    {
+      "source": "files/stuffit-expander/stuffit-expander-5.5.bin",
+      "target": ":Applications:StuffIt Expander 5.5"
+    },
+    {
+      "source": "files/misc/readme.bin",
+      "target": ":Welcome to macintosh.js"
+    },
+    {
+      "source": "files/netscape/netscape-navigator-gold-3.04.bin",
+      "target": ":Internet:Netscape Navigator Gold 3.04:Netscape Navigator Gold 3.04"
+    },
+    {
+      "source": "files/netscape/plug-ins/browser-known-problems.bin",
+      "target": ":Internet:Netscape Navigator Gold 3.04:Plug-ins:Browser-Known Problems"
+    },
+    {
+      "source": "files/netscape/plug-ins/default-plug-in.bin",
+      "target": ":Internet:Netscape Navigator Gold 3.04:Plug-ins:Default Plug-in"
+    },
+    {
+      "source": "files/netscape/plug-ins/liveaudio.bin",
+      "target": ":Internet:Netscape Navigator Gold 3.04:Plug-ins:LiveAudio"
+    },
+    {
+      "source": "files/netscape/plug-ins/quicktime-plugin.bin",
+      "target": ":Internet:Netscape Navigator Gold 3.04:Plug-ins:QuickTime Plugin"
+    },
+    {
+      "source": "files/netscape/plug-ins/read-me-v1.1.bin",
+      "target": ":Internet:Netscape Navigator Gold 3.04:Plug-ins:Read Me-v1.1"
+    }
+  ]
+}
