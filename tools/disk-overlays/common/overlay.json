@@ -4,7 +4,7 @@
   "files": [
     {
       "source": "files/stuffit-expander/stuffit-expander-5.5.bin",
-      "target": ":Applications:StuffIt Expander 5.5"
+      "target": ":Applications:StuffIt Expander 5.5:StuffIt Expander"
     },
     {
       "source": "files/misc/readme.bin",
