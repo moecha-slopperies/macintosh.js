@@ -30,7 +30,7 @@ import {
 import { RingBuffer } from "../renderer/ring-buffer.js";
 import { SpeedGovernor } from "../renderer/speed-governor.js";
 import prefsUrl from "./prefs_template?url";
-import romUrl from "./rom?url";
+import romUrl from "./rom.bin?url";
 import wasmUrl from "./BasiliskII.wasm?url";
 
 let macDir = "";
