@@ -277,12 +277,16 @@ function verifyMounted(version) {
   if (!plugins.includes("LiveAudio")) {
     throw new Error("assembled image has no Netscape plug-ins");
   }
-  const applications = run("hls", ["-l", ":Applications"], { quiet: true });
+  const applications = run(
+    "hls",
+    ["-l", ":Applications:StuffIt Expander 5.5"],
+    { quiet: true },
+  );
   if (
-    !applications.includes("APPL/STi0") ||
-    !applications.includes("StuffIt Expander 5.5 Installer")
+    !applications.includes("APPL/SITx") ||
+    !applications.includes("StuffIt Expander")
   ) {
-    throw new Error("assembled image has no StuffIt Expander installer");
+    throw new Error("assembled image has no StuffIt Expander app");
   }
   const root = run("hls", [":"], { quiet: true });
   if (!root.includes("Welcome to macintosh.js")) {
