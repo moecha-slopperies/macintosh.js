@@ -22,9 +22,36 @@ jobs:
         run: npm ci
       - name: lint
         run: npm run lint
+
+  disks:
+    name: Assemble disk (${{ matrix.version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["7.6", "8.1"]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 20.x
+      - name: Install disk tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y hfsutils unzip
+      - name: Assemble ${{ matrix.version }}
+        run: node tools/disk.mjs assemble --version ${{ matrix.version }} --out dist/disks/${{ matrix.version }}/disk
+      - name: Upload disk
+        uses: actions/upload-artifact@v4
+        with:
+          name: disk-${{ matrix.version }}
+          path: dist/disks/${{ matrix.version }}/disk
+          retention-days: 1
+
   build:
-    needs: lint
-    name: Build (${{ matrix.os }} - ${{ matrix.arch }})
+    needs: [lint, disks]
+    name: Build (${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.disk_version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -33,18 +60,56 @@ jobs:
           - os: macos-latest
             arch: arm64
             target: aarch64-apple-darwin
+            disk_version: "7.6"
+          - os: macos-latest
+            arch: arm64
+            target: aarch64-apple-darwin
+            disk_version: "8.1"
           - os: macos-latest
             arch: x64
             target: x86_64-apple-darwin
+            disk_version: "7.6"
+          - os: macos-latest
+            arch: x64
+            target: x86_64-apple-darwin
+            disk_version: "8.1"
           - os: ubuntu-latest
             arch: x64
             target: x86_64-unknown-linux-gnu
+            disk_version: "7.6"
+          - os: ubuntu-latest
+            arch: x64
+            target: x86_64-unknown-linux-gnu
+            disk_version: "8.1"
           - os: ubuntu-24.04-arm
             arch: arm64
             target: aarch64-unknown-linux-gnu
+            disk_version: "7.6"
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            target: aarch64-unknown-linux-gnu
+            disk_version: "8.1"
           - os: windows-latest
             arch: x64
             target: x86_64-pc-windows-msvc
+            disk_version: "7.6"
+          - os: windows-latest
+            arch: x64
+            target: x86_64-pc-windows-msvc
+            disk_version: "8.1"
+    env:
+      APPLE_CERTIFICATE: ${{ secrets.MACOS_CERT_P12 }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: "${{ secrets.MACOS_CERT_P12 != '' && secrets.MACOS_CERT_PASSWORD != '' && 'Developer ID Application: Felix Rieseberg (LT94ZKYDCJ)' || '' }}"
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+      APPLE_TEAM_ID: LT94ZKYDCJ
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_CODE_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT_NAME }}
+      AZURE_CODE_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_CODE_SIGNING_CERTIFICATE_PROFILE_NAME }}
+      AZURE_CODE_SIGNING_ENDPOINT: ${{ secrets.AZURE_CODE_SIGNING_ENDPOINT }}
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -68,7 +133,8 @@ jobs:
             libxdo-dev \
             libssl-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            zip
       - name: Set up Azure Trusted Signing
         if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
         shell: pwsh
@@ -77,35 +143,28 @@ jobs:
           $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter signtool.exe | Where-Object { $_.FullName -like "*\x64\*" } | Sort-Object FullName -Descending | Select-Object -First 1
           echo "SIGNTOOL_PATH=$($signtool.FullName)" >> $env:GITHUB_ENV
           echo "AZURE_CODE_SIGNING_DLIB=$((Resolve-Path 'Microsoft.Trusted.Signing.Client.1.0.60/bin/x64/Azure.CodeSigning.Dlib.dll').Path)" >> $env:GITHUB_ENV
-      - name: Download disk image (ps1)
-        run: tools/download-disk.ps1
-        if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
-        env:
-          DISK_URL: ${{ secrets.DISK_URL }}
-      - name: Download disk image (sh)
-        run: chmod +x tools/download-disk.sh && ./tools/download-disk.sh
-        if: matrix.os != 'windows-latest' && startsWith(github.ref, 'refs/tags/')
-        env:
-          DISK_URL: ${{ secrets.DISK_URL }}
+      - name: Download assembled disk
+        uses: actions/download-artifact@v4
+        with:
+          name: disk-${{ matrix.disk_version }}
+          path: src/basilisk
       - name: Install
         run: npm ci
-      - name: Build
-        if: startsWith(github.ref, 'refs/tags/')
-        run: npm run tauri -- build --target ${{ matrix.target }}
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.MACOS_CERT_P12 }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: "Developer ID Application: Felix Rieseberg (LT94ZKYDCJ)"
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: LT94ZKYDCJ
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_CODE_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT_NAME }}
-          AZURE_CODE_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_CODE_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          AZURE_CODE_SIGNING_ENDPOINT: ${{ secrets.AZURE_CODE_SIGNING_ENDPOINT }}
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: npm run tauri -- build --target ${{ matrix.target }} --bundles dmg ${{ (startsWith(github.ref, 'refs/tags/') && env.APPLE_CERTIFICATE != '' && env.APPLE_CERTIFICATE_PASSWORD != '') && '' || '--no-sign' }}
+      - name: Build (Windows/Linux)
+        if: runner.os != 'macOS'
+        run: npm run tauri -- build --target ${{ matrix.target }} ${{ startsWith(github.ref, 'refs/tags/') && '' || '--no-sign' }}
+      - name: Collect artifacts
+        run: node tools/collect-artifacts.mjs --disk-version ${{ matrix.disk_version }} --target ${{ matrix.target }} --out artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macintosh.js-${{ matrix.disk_version }}-${{ matrix.target }}
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 7
       - name: Release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         if: startsWith(github.ref, 'refs/tags/')
@@ -113,10 +172,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           draft: true
-          files: |
-            src-tauri/target/**/release/bundle/**/*.deb
-            src-tauri/target/**/release/bundle/**/*.dmg
-            src-tauri/target/**/release/bundle/**/*.msi
-            src-tauri/target/**/release/bundle/**/*.rpm
-            src-tauri/target/**/release/bundle/**/*.AppImage
-            src-tauri/target/**/release/bundle/**/*.exe
+          files: artifacts/*

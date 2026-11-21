@@ -103,3 +103,6 @@ src/basilisk/user_files
 src/basilisk/user_image_*
 src/basilisk/disk
 src/basilisk/prefs
+
+# Release artifacts
+artifacts/

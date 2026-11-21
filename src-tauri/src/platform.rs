@@ -97,7 +97,7 @@ pub fn copy_initial_disk(resources: &Path, target: &Path) -> Result<(), String> 
         Ok(())
     } else {
         Err(format!(
-            "bundled disk image is missing: {}. Set DISK_URL and run the download-disk script before packaging.",
+            "bundled disk image is missing: {}. Run `npm run disk:assemble` before packaging.",
             source.display()
         ))
     }
