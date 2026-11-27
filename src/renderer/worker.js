@@ -76,8 +76,10 @@ export async function registerWorker() {
     screenHeight: SCREEN_HEIGHT,
   };
 
+  // The worker entry is resolved by core in vite.config.js; a runtime branch
+  // would bundle both emulator cores into every build.
   worker = window.emulatorWorker = new Worker(
-    new URL("../basilisk/BasiliskII-worker-boot.js", import.meta.url),
+    new URL("@emulator-worker-entry", import.meta.url),
     { type: "module" },
   );
   setupDiskBridge(worker);

@@ -14,6 +14,13 @@
       "imageSha256": "e8e9be417a064f4c1e2e257253f901b141f3b64936139467cdc2863a8348a709",
       "member": "Mac OS 8.1 HD.dsk",
       "description": "Mac OS 8.1"
+    },
+    "8.6": {
+      "url": "https://github.com/mihaip/infinite-mac/releases/download/mac-os-disk-images-2025-11-30/Mac.OS.8.6.HD.dsk.zip?v=3",
+      "zipSha256": "2653032f568653bbdee0db030af66bb0ae31da697493b980bbfa1efc13b02763",
+      "imageSha256": "09df089378219d37008f1b5ab99842ed3c50709cf6a98c5da11f3f7c21d9d9f4",
+      "member": "Mac OS 8.6 HD.dsk",
+      "description": "Mac OS 8.6"
     }
   }
 }

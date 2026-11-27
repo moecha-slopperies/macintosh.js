@@ -5,6 +5,26 @@ use std::{
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
+#[cfg(feature = "ppc")]
+pub const APP_FOLDER_NAME: &str = "macintosh.js-ppc";
+#[cfg(not(feature = "ppc"))]
+pub const APP_FOLDER_NAME: &str = "macintosh.js";
+
+#[cfg(feature = "ppc")]
+pub const APP_TITLE: &str = "macintosh.js PPC";
+#[cfg(not(feature = "ppc"))]
+pub const APP_TITLE: &str = "macintosh.js";
+
+#[cfg(feature = "ppc")]
+pub const CORE_RESOURCE_DIR: &str = "sheepshaver";
+#[cfg(not(feature = "ppc"))]
+pub const CORE_RESOURCE_DIR: &str = "basilisk";
+
+#[cfg(feature = "ppc")]
+pub const DISK_ASSEMBLE_COMMAND: &str = "npm run disk:assemble:ppc";
+#[cfg(not(feature = "ppc"))]
+pub const DISK_ASSEMBLE_COMMAND: &str = "npm run disk:assemble";
+
 pub fn home_dir() -> Result<PathBuf, String> {
     std::env::var_os("HOME")
         .or_else(|| std::env::var_os("USERPROFILE"))
@@ -13,7 +33,7 @@ pub fn home_dir() -> Result<PathBuf, String> {
 }
 
 pub fn shared_dir() -> Result<PathBuf, String> {
-    Ok(home_dir()?.join("macintosh.js"))
+    Ok(home_dir()?.join(APP_FOLDER_NAME))
 }
 
 pub fn user_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -24,7 +44,7 @@ pub fn user_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
     let parent = config_dir
         .parent()
         .ok_or_else(|| format!("could not determine the parent of {}", config_dir.display()))?;
-    Ok(parent.join("macintosh.js"))
+    Ok(parent.join(APP_FOLDER_NAME))
 }
 
 pub fn dev_marker(app: &AppHandle) -> Result<PathBuf, String> {
@@ -72,7 +92,7 @@ pub fn open_license(app: &AppHandle) -> Result<(), String> {
         .path()
         .resource_dir()
         .map_err(|error| format!("could not determine resource directory: {error}"))?
-        .join("basilisk")
+        .join(CORE_RESOURCE_DIR)
         .join("LICENSE.txt");
     tauri_plugin_opener::open_path(path, None::<&str>)
         .map_err(|error| format!("could not open the license: {error}"))
@@ -86,7 +106,7 @@ pub fn copy_initial_disk(resources: &Path, target: &Path) -> Result<(), String> 
         fs::create_dir_all(parent)
             .map_err(|error| format!("could not create {}: {error}", parent.display()))?;
     }
-    let source = resources.join("basilisk").join("disk");
+    let source = resources.join(CORE_RESOURCE_DIR).join("disk");
     if source.exists() {
         return fs::copy(&source, target)
             .map(|_| ())
@@ -97,8 +117,9 @@ pub fn copy_initial_disk(resources: &Path, target: &Path) -> Result<(), String> 
         Ok(())
     } else {
         Err(format!(
-            "bundled disk image is missing: {}. Run `npm run disk:assemble` before packaging.",
-            source.display()
+            "bundled disk image is missing: {}. Run `{}` before packaging.",
+            source.display(),
+            DISK_ASSEMBLE_COMMAND
         ))
     }
 }

@@ -224,7 +224,7 @@ fn open_child_window(app: &AppHandle, origin: &AppOrigin, url: &Url) -> Result<(
 fn setup_window(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let origin = AppOrigin::new(app)?;
     let window = WebviewWindowBuilder::new(app, "main", origin.webview_url("index.html")?)
-        .title("macintosh.js")
+        .title(platform::APP_TITLE)
         .inner_size(800.0, 655.0)
         .transparent(true)
         .decorations(false)

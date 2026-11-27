@@ -10,6 +10,10 @@ rust-version = "1.91"
 name = "macintosh_js_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+default = []
+ppc = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

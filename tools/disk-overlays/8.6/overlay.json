@@ -1,0 +1,10 @@
+{
+  "description": "Mac OS 8.6 sound output defaults for New World PowerPC Macs.",
+  "deletes": [],
+  "files": [
+    {
+      "source": "files/sound-preferences.bin",
+      "target": ":System Folder:Preferences:Sound Preferences"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "macintosh.js PPC",
+  "identifier": "com.felixrieseberg.macintoshjs.ppc",
+  "build": {
+    "beforeDevCommand": "npm run dev:renderer:ppc",
+    "beforeBuildCommand": "npm run build:renderer:ppc"
+  },
+  "bundle": {
+    "shortDescription": "PowerPC Mac OS in a Tauri app",
+    "longDescription": "A PowerPC Mac OS virtual machine, packaged as a small Tauri desktop app.",
+    "resources": {
+      "../src/sheepshaver/*": "sheepshaver"
+    }
+  }
+}

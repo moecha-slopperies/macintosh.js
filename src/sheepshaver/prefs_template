@@ -1,0 +1,16 @@
+disk disk
+extfs /macintosh.js/
+rom rom
+ether js
+bootdrive 0
+bootdriver 0
+ramsize 268435456
+frameskip 0
+nosound false
+nogui true
+idlewait true
+jit false
+keycodes false
+mousewheelmode 1
+mousewheellines 3
+jsfrequentreadinput true

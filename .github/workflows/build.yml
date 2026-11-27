@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["7.6", "8.1"]
+        version: ["7.6", "8.1", "8.6"]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Setup Node.js
@@ -51,52 +51,43 @@ jobs:
 
   build:
     needs: [lint, disks]
-    name: Build (${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.disk_version }})
-    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.platform.os }} - ${{ matrix.platform.arch }} - ${{ matrix.variant.label }})
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
+        platform:
           - os: macos-latest
             arch: arm64
             target: aarch64-apple-darwin
-            disk_version: "7.6"
-          - os: macos-latest
-            arch: arm64
-            target: aarch64-apple-darwin
-            disk_version: "8.1"
           - os: macos-latest
             arch: x64
             target: x86_64-apple-darwin
-            disk_version: "7.6"
-          - os: macos-latest
-            arch: x64
-            target: x86_64-apple-darwin
-            disk_version: "8.1"
           - os: ubuntu-latest
             arch: x64
             target: x86_64-unknown-linux-gnu
-            disk_version: "7.6"
-          - os: ubuntu-latest
-            arch: x64
-            target: x86_64-unknown-linux-gnu
-            disk_version: "8.1"
           - os: ubuntu-24.04-arm
             arch: arm64
             target: aarch64-unknown-linux-gnu
-            disk_version: "7.6"
-          - os: ubuntu-24.04-arm
-            arch: arm64
-            target: aarch64-unknown-linux-gnu
-            disk_version: "8.1"
           - os: windows-latest
             arch: x64
             target: x86_64-pc-windows-msvc
+        variant:
+          - label: 68K / 7.6
+            core: basilisk
             disk_version: "7.6"
-          - os: windows-latest
-            arch: x64
-            target: x86_64-pc-windows-msvc
+            artifact_prefix: macintosh.js
+            tauri_args: "--config src-tauri/tauri.68k.conf.json"
+          - label: 68K / 8.1
+            core: basilisk
             disk_version: "8.1"
+            artifact_prefix: macintosh.js
+            tauri_args: "--config src-tauri/tauri.68k.conf.json"
+          - label: PPC / 8.6
+            core: sheepshaver
+            disk_version: "8.6"
+            artifact_prefix: macintosh.js-ppc
+            tauri_args: "--config src-tauri/tauri.ppc.conf.json --features ppc"
     env:
       APPLE_CERTIFICATE: ${{ secrets.MACOS_CERT_P12 }}
       APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
@@ -121,9 +112,9 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.platform.target }}
       - name: Install Linux dependencies
-        if: startsWith(matrix.os, 'ubuntu-')
+        if: startsWith(matrix.platform.os, 'ubuntu-')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -136,7 +127,7 @@ jobs:
             patchelf \
             zip
       - name: Set up Azure Trusted Signing
-        if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
+        if: matrix.platform.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         run: |
           nuget install Microsoft.Trusted.Signing.Client -Version 1.0.60 -OutputDirectory . -NonInteractive
@@ -146,22 +137,22 @@ jobs:
       - name: Download assembled disk
         uses: actions/download-artifact@v4
         with:
-          name: disk-${{ matrix.disk_version }}
-          path: src/basilisk
+          name: disk-${{ matrix.variant.disk_version }}
+          path: src/${{ matrix.variant.core }}
       - name: Install
         run: npm ci
       - name: Build (macOS)
         if: runner.os == 'macOS'
-        run: npm run tauri -- build --target ${{ matrix.target }} --bundles dmg ${{ (startsWith(github.ref, 'refs/tags/') && env.APPLE_CERTIFICATE != '' && env.APPLE_CERTIFICATE_PASSWORD != '') && '' || '--no-sign' }}
+        run: npm run tauri -- build ${{ matrix.variant.tauri_args }} --target ${{ matrix.platform.target }} --bundles dmg ${{ (startsWith(github.ref, 'refs/tags/') && env.APPLE_CERTIFICATE != '' && env.APPLE_CERTIFICATE_PASSWORD != '') && '' || '--no-sign' }}
       - name: Build (Windows/Linux)
         if: runner.os != 'macOS'
-        run: npm run tauri -- build --target ${{ matrix.target }} ${{ startsWith(github.ref, 'refs/tags/') && '' || '--no-sign' }}
+        run: npm run tauri -- build ${{ matrix.variant.tauri_args }} --target ${{ matrix.platform.target }} ${{ startsWith(github.ref, 'refs/tags/') && '' || '--no-sign' }}
       - name: Collect artifacts
-        run: node tools/collect-artifacts.mjs --disk-version ${{ matrix.disk_version }} --target ${{ matrix.target }} --out artifacts
+        run: node tools/collect-artifacts.mjs --disk-version ${{ matrix.variant.disk_version }} --target ${{ matrix.platform.target }} --name ${{ matrix.variant.artifact_prefix }} --out artifacts
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macintosh.js-${{ matrix.disk_version }}-${{ matrix.target }}
+          name: ${{ matrix.variant.artifact_prefix }}-${{ matrix.variant.disk_version }}-${{ matrix.platform.target }}
           path: artifacts/*
           if-no-files-found: error
           retention-days: 7

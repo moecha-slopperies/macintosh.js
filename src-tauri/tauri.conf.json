@@ -31,9 +31,6 @@
       "icons/icon.ico",
       "icons/icon.png"
     ],
-    "resources": {
-      "../src/basilisk/*": "basilisk"
-    },
     "macOS": {
       "minimumSystemVersion": "10.15"
     },

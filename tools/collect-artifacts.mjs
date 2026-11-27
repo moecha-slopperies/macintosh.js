@@ -20,13 +20,14 @@ const packageJson = JSON.parse(
 
 function usage() {
   console.log(`Usage:
-  node tools/collect-artifacts.mjs --disk-version <version> --target <triple> [--out <dir>]`);
+  node tools/collect-artifacts.mjs --disk-version <version> --target <triple> [--name <prefix>] [--out <dir>]`);
 }
 
 function parseArgs(argv) {
   const options = {
     diskVersion: undefined,
     target: undefined,
+    name: "macintosh.js",
     output: join(root, "artifacts"),
   };
   for (let index = 0; index < argv.length; index++) {
@@ -39,6 +40,10 @@ function parseArgs(argv) {
       options.target = argv[++index];
     } else if (arg.startsWith("--target=")) {
       options.target = arg.slice("--target=".length);
+    } else if (arg === "--name") {
+      options.name = argv[++index];
+    } else if (arg.startsWith("--name=")) {
+      options.name = arg.slice("--name=".length);
     } else if (arg === "--out") {
       options.output = resolve(argv[++index]);
     } else if (arg.startsWith("--out=")) {
@@ -108,7 +113,7 @@ function zipBundle(bundle, destination) {
 function main() {
   const options = parseArgs(process.argv.slice(2));
   const bundle = bundleDirectory(options.target);
-  const prefix = `macintosh.js-${packageJson.version}-${options.diskVersion}-${options.target}`;
+  const prefix = `${options.name}-${packageJson.version}-${options.diskVersion}-${options.target}`;
   mkdirSync(options.output, { recursive: true });
 
   if (process.platform === "darwin") {
